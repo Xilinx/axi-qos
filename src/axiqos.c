@@ -21,15 +21,14 @@
 #include "uio_common.h"
 
 
-#define DEFAULT_SETQOS			(0x0)
+#define DEFAULT_SETQOS			(0x7)
 #define DEFAULT_METRIC			(0x0)
-#define DEFAULT_QOSVAL			(0x7)
 #define DEFAULT_PORTNUM			(0x6)
 
-u32 set_qos = DEFAULT_SETQOS;
-u32 metric = DEFAULT_METRIC;
-u32 qos_val = DEFAULT_QOSVAL;
-u32 port_num = DEFAULT_PORTNUM;
+int set_qos = -1;
+int qos_type = -1;
+int port_num = -1;
+u32 qos_val = 0xf;
 
 static uint32_t getopt_integer(char *optarg)
 {
@@ -42,15 +41,17 @@ static uint32_t getopt_integer(char *optarg)
 }
 
 static struct option const long_opts[] = {
-	{"set qos value :range[0-1] \n0-get qos \n1-set qos\n",
+	{"set qos value :range[0-0xf] \n",
 		required_argument, NULL, 's'},
-	{"Qos type :range[1-4] \n1-read qos\n2-write qos\n"
+	{"get qos value for the given port \n",
+		required_argument, NULL, 'g'},
+	{"qos type :range[1-4] \n1-read qos\n2-write qos\n"
 		"3-outstanding_rdissue\n4-outstanding_wrissue\n",
-		required_argument, NULL, 'm'},
+		required_argument, NULL, 't'},
 	{"port no\n 0-HPC0\n 1-HPC1\n 2-HP0\n 3-HP1\n 4-HP2\n"
 		" 5-HP3\n 6-All ports\n",
 		required_argument, NULL, 'p'},
-	{"val :range[0-0xF]\n", required_argument, NULL, 'v'},
+	{"version\n", required_argument, NULL, 'v'},
 	{"help\n", no_argument, NULL, 'h'},
 	{0, 0, 0, 0}
 };
@@ -63,13 +64,15 @@ static void usage(const char *name)
 	int i = 0;
 
 	fprintf(stdout, "%s\n\n", name);
+	fprintf(stdout, "Xilinx copyright 2021\n\n");
+	fprintf(stdout, "This application is to set QOS value for AXI ports\n on ZYNQMP platform\n\n");
 	fprintf(stdout, "usage: %s [OPTIONS]\n\n", name);
+	fprintf(stdout, "%s -s <val> -t <qos type> -p <port num> \n\n", name);
+	fprintf(stdout, "%s -g -t <qos type> -p <port num> \n\n", name);
 
 	for (i=0 ; i<(sizeof(long_opts)/sizeof(long_opts[0])) - 2; i++)
 		fprintf(stdout, "-%c represents %s\n",
 			long_opts[i].val, long_opts[i].name);
-	fprintf(stdout, "-%c (%s) print usage help and exit\n",
-		long_opts[i].val, long_opts[i].name);
 	i++;
 }
 
@@ -77,8 +80,13 @@ int main(int argc, char *argv[])
 {
 	int cmd_opt;
 
+	if (argc == 1) {
+		usage(argv[0]);
+		return 0;
+	}
+
 	while ((cmd_opt =
-		getopt_long(argc, argv, "hc:s:m:v:p:", long_opts,
+		getopt_long(argc, argv, "hgvc:s:t:p:", long_opts,
 			    NULL)) != -1) {
 		switch (cmd_opt) {
 		case 0:
@@ -86,23 +94,28 @@ int main(int argc, char *argv[])
 			break;
 
 		case 's':
-			set_qos	= getopt_integer(optarg);
-			if (set_qos < 0 || set_qos > 1) {
-				set_qos = DEFAULT_SETQOS;
-				printf("-s is to set/get qos configuration for the AXI ports\n"
-						"select in the range of [0-1] \n"
-						"0-get qos\n1-set qos\n");
+			set_qos = 1;
+			qos_val	= getopt_integer(optarg);
+			if (qos_val < 0 || qos_val > 0xf) {
+				printf("-s is to set qos value for the AXI ports\n"
+						"select in the range of [0-0xf] \n");
+				return 0;
 			}
 			break;
 
-		case 'm':
-			metric = getopt_integer(optarg);
-			if (metric < 1 || metric > 4) {
-				metric = DEFAULT_METRIC;
-				printf("-m is to selct the qos type for the AXI ports\n"
+		case 'g':
+			set_qos = 0;
+			break;
+
+		case 't':
+			qos_type = getopt_integer(optarg);
+			if (qos_type < 1 || qos_type > 4) {
+				qos_type = DEFAULT_METRIC;
+				printf("-t is to selct the qos type for the AXI ports\n"
 						"select in the range of [1-4] \n"
 						"1-read qos\n2-write qos\n3-outstanding_rdissue\n"
 						"4-outstanding_wrissue\n");
+				return 0;
 			}
 			break;
 
@@ -112,29 +125,33 @@ int main(int argc, char *argv[])
 				port_num = DEFAULT_PORTNUM;
 				printf("-p: to select port no: 0-HPC0 \n1-HPC1 \n"
 						"2-HP0 \n3-HP1 \n4-HP2 \n5-HP3 \n6-All ports\n");
+				return 0;
 			}
 			break;
 
 		case 'v':
-			qos_val	= getopt_integer(optarg);
-			if (qos_val < 0 || qos_val > 0xF) {
-				qos_val = DEFAULT_QOSVAL;
-				printf("-w qos value should be 0-0xF\n");
-			}
+			printf("Xilinx ZYNQMP axi qos app version 0.1 \n");
+			return 0;
 			break;
 
 		case 'h':
-		default:
 			usage(argv[0]);
 			return 0;
 			break;
+		default:
+			printf("Invalid option. type -h for help \n");
+			return 0;
 		}
 	}
-	if (cmd_opt == 0) {
-		usage(argv[0]);
+	if (set_qos < 0 || qos_type < 0 || port_num < 0) {
+		printf("Invalid input, type -h for help\n");
+		printf("Usage: \n");
+		printf("%s -s <val> -t <qos type> -p <port num> \n\n", argv[0]);
+		printf("%s -g -t <qos type> -p <port num> \n\n", argv[0]);
 		return 0;
 	}
-	return XAxiQos_rd_wr_qos(set_qos, metric, port_num, qos_val);
+
+	return XAxiQos_rd_wr_qos(set_qos, qos_type, port_num, qos_val);
 }
 
 
