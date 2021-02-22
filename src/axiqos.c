@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Xilinx Inc.
+ * Copyright 2021 Xilinx, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,10 +21,9 @@
 #include "uio_common.h"
 
 
-#define DEFAULT_SETQOS			(0x7)
-#define DEFAULT_METRIC			(0x0)
 #define DEFAULT_PORTNUM			(0x6)
 
+/* setting to default values */
 int set_qos = -1;
 int qos_type = -1;
 int port_num = -1;
@@ -110,7 +109,6 @@ int main(int argc, char *argv[])
 		case 't':
 			qos_type = getopt_integer(optarg);
 			if (qos_type < 1 || qos_type > 4) {
-				qos_type = DEFAULT_METRIC;
 				printf("-t is to selct the qos type for the AXI ports\n"
 						"select in the range of [1-4] \n"
 						"1-read qos\n2-write qos\n3-outstanding_rdissue\n"

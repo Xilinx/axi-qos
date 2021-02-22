@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Xilinx Inc.
+ * Copyright 2021 Xilinx, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 
 #ifndef UIO_COMMON_H_
 #define UIO_COMMON_H_
@@ -48,7 +49,7 @@ typedef struct {
 } uio_info;
 
 typedef struct {
-	void *Control_bus_BaseAddress; /* Base address of VCU APM */
+	void *Control_bus_BaseAddress; /* Base address*/
 	void *params[MAX_UIO_MAPS];
 	u32 IsReady;
 } uio_handle;

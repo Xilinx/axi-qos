@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Xilinx Inc.
+ * Copyright 2021 Xilinx, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef UAXI_QOS_H_
 #define UAXI_QOS_H_
 
@@ -25,8 +26,6 @@
 
 #define EXIT_SUCCESS	0
 #define EXIT_FAIL		1
-
-
 
 enum AxiQos_Port {
 	HPC0_PORT,
