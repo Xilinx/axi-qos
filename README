@@ -1,32 +1,36 @@
-PetaLinux User Application Template
+axi-qos
 ===================================
+Xilinx copyright 2021
 
-This directory contains a PetaLinux user application created from a template.
+This application is to set QOS value for AXI ports
+ on ZYNQMP platform
 
-If you are developing your application from scratch, simply start editing the
-file defect-detection.c.
+usage: axi-qos [OPTIONS]
 
-You can easily import any existing application code by copying it into this 
-directory, and editing the automatically generated Makefile.
+axi-qos -s <val> -t <qos type> -p <port num>
 
-Before building the application, you will need to enable the application
-from PetaLinux menuconfig by running:
-    "petalinux-config -c rootfs"
-You will see your application in the "apps --->" submenu.
+axi-qos -g -t <qos type> -p <port num>
 
-To build your application, simply run "petalinux-build -c defect-detection".
-This command will build your application and will install your application
-into the target file system host copy.
+-s represents set qos value :range[0-0xf]
 
-You will also need to rebuild PetaLinux bootable images so that the images
-is updated with the updated target filesystem copy, run this command:
-    "petalinux-build -c rootfs"
+-g represents get qos value for the given port
 
-You can also run one PetaLinux command to install the application to the
-target filesystem host copy and update the bootable images as follows:
-    "petalinux-build"
+-t represents qos type :range[1-4]
+1-read qos
+2-write qos
+3-outstanding_rdissue
+4-outstanding_wrissue
 
-To add extra source code files (for example, to split a large application into 
-multiple source files), add the relevant .o files to the list in the local 
-Makefile where indicated.  
+-p represents port no
+ 0-HPC0
+ 1-HPC1
+ 2-HP0
+ 3-HP1
+ 4-HP2
+ 5-HP3
+ 6-All ports
+
+-v represents version
+
+
 
