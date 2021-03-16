@@ -17,17 +17,30 @@
 #include <getopt.h>
 #include <stdio.h>
 #include <unistd.h>
-#include "uio_axiqos.h"
-#include "uio_common.h"
-
-
+#include <devmem_axiqos.h>
 #define DEFAULT_PORTNUM			(0x6)
 
 /* setting to default values */
 int set_qos = -1;
 int qos_type = -1;
-int port_num = -1;
 u32 qos_val = 0xf;
+
+const char port_name[7][5] = {
+				"HPC0",
+				"HPC1",
+				"HP0",
+				"HP1",
+				"HP2",
+				"HP3"
+				};
+
+const char qos_name[6][9] = {
+				"\0",
+				"RDQoS",
+				"WRQoS",
+				"RDISSUE",
+				"WRISSUE",
+				};
 
 static uint32_t getopt_integer(char *optarg)
 {
@@ -62,9 +75,9 @@ static void usage(const char *name)
 {
 	int i = 0;
 
-	fprintf(stdout, "%s\n\n", name);
 	fprintf(stdout, "Xilinx copyright 2021\n\n");
-	fprintf(stdout, "This application is to set QOS value for AXI ports\n on ZYNQMP platform\n\n");
+	fprintf(stdout, "This application is to set QOS value"
+								"for AXI ports\n on ZYNQMP platform\n\n");
 	fprintf(stdout, "usage: %s [OPTIONS]\n\n", name);
 	fprintf(stdout, "%s -s <val> -t <qos type> -p <port num> \n\n", name);
 	fprintf(stdout, "%s -g -t <qos type> -p <port num> \n\n", name);
@@ -78,6 +91,7 @@ static void usage(const char *name)
 int main(int argc, char *argv[])
 {
 	int cmd_opt;
+	u32 port_num = 0xf;
 
 	if (argc == 1) {
 		usage(argv[0]);
@@ -141,6 +155,7 @@ int main(int argc, char *argv[])
 			return 0;
 		}
 	}
+
 	if (set_qos < 0 || qos_type < 0 || port_num < 0) {
 		printf("Invalid input, type -h for help\n");
 		printf("Usage: \n");
@@ -149,53 +164,37 @@ int main(int argc, char *argv[])
 		return 0;
 	}
 
-	return XAxiQos_rd_wr_qos(set_qos, qos_type, port_num, qos_val);
+	if ( port_num >= 0 && port_num <= 5) {
+		return XAxiQos_rd_wr_qos(set_qos, qos_type, port_num, qos_val);
+	} else if (port_num == 6) {
+		u32 port;
+		for (port = 0; port < port_num; port++) {
+			XAxiQos_rd_wr_qos(set_qos, qos_type, port, qos_val);
+		}
+	} else {
+		printf("Invalid port number\n");
+	}
 }
 
 
 static int XAxiQos_rd_wr_qos(u32 set_qos, u32 metric,
 								 u32 port_num, u32 qos_val) {
-	uio_handle qos_handle;
+	mem_info qos_handle;
 	int ret;
+	u32 Val;
 
-	ret = uAxiQos_Init(&qos_handle);
+	ret = XAxiQos_Init(&qos_handle, port_num);
 	if (ret > 0)
 		return ret;
 	if (set_qos) {
-		switch(metric) {
-			case 1:
-				XAxiQos_SetRdQos(&qos_handle, port_num, qos_val);
-				break;
-			case 2:
-				XAxiQos_SetWrQos(&qos_handle, port_num, qos_val);
-				break;
-			case 3:
-				XAxiQos_SetRdIssue(&qos_handle, port_num, qos_val);
-				break;
-			case 4:
-				XAxiQos_SetWrIssue(&qos_handle, port_num, qos_val);
-				break;
-			default:
-				break;
-			}
+		XAxiQos_SetQos(&qos_handle, metric, qos_val);
+		printf ("%s value was set for %s port"
+									" with 0x%x\n", qos_name[metric],
+									port_name[port_num], qos_val);
 	} else {
-		switch(metric) {
-			case 1:
-				XAxiQos_GetRdQos(&qos_handle, port_num);
-				break;
-			case 2:
-				XAxiQos_GetWrQos(&qos_handle, port_num);
-				break;
-			case 3:
-				XAxiQos_GetRdIssue(&qos_handle, port_num);
-				break;
-			case 4:
-				XAxiQos_GetWrIssue(&qos_handle, port_num);
-				break;
-			default:
-				break;
-		}
+		Val = XAxiQos_GetQos(&qos_handle, metric);
+		printf("%s value of %s port is 0x%x\n",qos_name[metric],
+										 port_name[port_num], Val);
 	}
-
-	return uAxiQos_DeInit(&qos_handle);
+	return XAxiQos_DeInit(&qos_handle);
 }
