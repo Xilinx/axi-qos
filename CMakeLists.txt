@@ -29,10 +29,12 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -std=c++14")
 
 include_directories(include)
 
+include_directories(include)
+file(GLOB SOURCES "src/*.c")
 SET(INSTALL_PATH "usr/bin")
 
 # Declare the executable target built from your sources
-add_executable(axi-qos src/axiqos.c src/uio_common.c src/uio_axiqos.c)
+add_executable(axi-qos ${SOURCES})
 
 install(TARGETS axi-qos RUNTIME DESTINATION ${INSTALL_PATH})
 
